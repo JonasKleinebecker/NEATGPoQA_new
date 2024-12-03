@@ -1,0 +1,40 @@
+setup_params:
+  computer_id: 9
+  run_id: 8
+  fitness_weights: (-1.0, -1.0)
+  max_ind_length: 30
+  use_neat: True
+  gate_set: ["h", "x", "mcx", "rx", "ry", "rz", "swap", "mcp"]
+  max_time: 15
+  simulator_type: "statevector"
+  test_problem: full_adder
+  min_gate_error: 0.005
+  verbose: False
+
+hyper_params:
+  cross_prob: 0.8
+  mut_prob: 0.55
+  pop_size: 1000
+  num_elites: 1
+
+neat_params:
+  replace_p_worst: 0.75
+  survival_perc: 0.5
+  init_mutations: 16
+  angle_coeff: 0.07
+  conn_node_coeff: 0.6
+  gate_node_coeff: 0.6
+  gate_type_coeff: 0.14
+  species_threshold: 1.2
+  adj_fitness_reg_term: 2
+  add_conn_prob: 0.1
+  split_conn_prob: 0.3
+  change_angles_prob: 0.3
+  change_conn_types_prob: 0.15
+  change_gates_prob: 0.15
+  change_ind_angle_prob: 0.3
+  assign_random_angle_prob: 0.1
+  max_angle_change: 0.3
+  change_ind_gate_prob: 0.2
+  change_ind_conn_type_prob: 0.25
+  max_offspring_perc: 0.015

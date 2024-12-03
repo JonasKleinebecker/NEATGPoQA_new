@@ -1,0 +1,3 @@
+1 input qubit deutsch-josza
+    test_individual = [('h', 0), ('ry', 5.685273020407217, 1), ['oracle'], ('h', 0)]
+    only 4 gates used in the circuit instead of the 5 gates used in the original circuit. However the circuit produces an error of ~11%
