@@ -1084,6 +1084,13 @@ class ConfigurableGP:
         for ind in self.stats.best_pareto_front_ind:
             self.save_individual(ind,self.run_folder_path + f"pareto_front_{ind.id}.png")
 
+    def cleanup_creator(self):
+    # List the classes you created in the `creator` module and delete them
+        attributes_to_delete = ["Fitness", "Individual"]
+        for attr in attributes_to_delete:
+            if hasattr(creator, attr):
+                delattr(creator, attr)
+
     def run(self):
         if self.setup_params.use_neat:
             self.run_neat_gp()
@@ -1114,6 +1121,7 @@ class ConfigurableGP:
             #quantum_full_adder_ind.append(GateGene(GateType.MCX, target_qubit=1, control_qubits=[0]))
             #print(f"Known quantum full adder solution error: {self.evaluate_quantum_full_adder_3_qubits(quantum_full_adder_ind)}")
             self.run_base_gp()
+        self.cleanup_creator()
 #quantum_fourier_3_individual = [["h", 2], ["cp", np.pi/2, 1, 2], ["h", 1], ["cp", np.pi/4, 0, 2], ["cp",np.pi/2, 0, 1], ["h", 0], ["swap", 0, 2]]
 #deutsch_josza_3_individual = [('h', 0), ('h', 1), ('x', 2), ('h', 2), ['oracle'], ('h', 0), ('h', 1)]
 #print(f"Known solution error: {self.toolbox.evaluate(deutsch_josza_3_individual)}")

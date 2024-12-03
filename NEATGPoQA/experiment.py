@@ -8,12 +8,16 @@ import shutil
 import yaml
 
 def run_gp(config_file):
-    start_time = time.time()
-    print(f"Started running {config_file} at {time.strftime('%H:%M:%S', time.localtime(start_time))}")
-    gp = ConfigurableGP(config_file)
-    gp.run()
-    end_time = time.time()
-    print(f"Finished running {config_file} at {time.strftime('%H:%M:%S', time.localtime(end_time))}")
+    try:
+        start_time = time.time()
+        print(f"Started running {config_file} at {time.strftime('%H:%M:%S', time.localtime(start_time))}")
+        gp = ConfigurableGP(config_file)
+        gp.run()
+        end_time = time.time()
+        print(f"Finished running {config_file} at {time.strftime('%H:%M:%S', time.localtime(end_time))}")
+    except Exception as e:
+        print(f"Error processing {config_file}: {e}")
+
 
 def organize_config_files(config_dir):
     """
