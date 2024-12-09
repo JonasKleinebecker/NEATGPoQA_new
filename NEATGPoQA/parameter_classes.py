@@ -30,10 +30,11 @@ class SetupParams:
             self.gate_set.append(GateType.ORACLE)
 
 class NeatParams:
-    def __init__(self, replace_p_worst, survival_perc, init_mutations, conn_node_coeff, angle_coeff, gate_node_coeff, gate_type_coeff, species_threshold, adj_fitness_reg_term, add_conn_prob, split_conn_prob, change_angles_prob, change_ind_angle_prob, assign_random_angle_prob, max_angle_change, change_gates_prob, change_ind_gate_prob, change_conn_types_prob, change_ind_conn_type_prob, max_offspring_perc):
+    def __init__(self, replace_p_worst, survival_perc, min_init_mutations, max_init_mutations, conn_node_coeff, angle_coeff, gate_node_coeff, gate_type_coeff, species_threshold, adj_fitness_reg_term, add_conn_prob, split_conn_prob, change_angles_prob, change_ind_angle_prob, assign_random_angle_prob, max_angle_change, change_gates_prob, change_ind_gate_prob, change_conn_types_prob, change_ind_conn_type_prob, max_offspring_perc):
         self.replace_p_worst = replace_p_worst
         self.survival_perc = survival_perc
-        self.init_mutations = init_mutations
+        self.min_init_mutations = min_init_mutations
+        self.max_init_mutations = max_init_mutations
         self.conn_node_coeff = conn_node_coeff
         self.angle_coeff = angle_coeff
         self.gate_node_coeff = gate_node_coeff

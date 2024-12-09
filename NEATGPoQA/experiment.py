@@ -122,8 +122,8 @@ if __name__ == "__main__":
 
     output_dir = "config_files/generated"
     base_config_file = "config_files/neat_test.yaml"
-    num_computers = 20
-    runs = 10  
+    num_computers = 1
+    runs = 4  
     #generate_config_files(param_ranges, output_dir, base_config_file, num_computers, runs, "neat")
 
     param_ranges = {

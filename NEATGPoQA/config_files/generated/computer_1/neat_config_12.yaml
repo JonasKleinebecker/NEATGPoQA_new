@@ -1,18 +1,20 @@
 setup_params:
+  computer_id: 1
+  run_id: 2
   fitness_weights: (-1.0, -1.0)
   max_ind_length: 30
   use_neat: True
   gate_set: ["h", "x", "mcx", "rx", "ry", "rz", "swap", "mcp"]
   max_time: 15
   simulator_type: "statevector"
-  test_problem: "deutsch_josza"
+  test_problem: full_adder
   min_gate_error: 0.005
   verbose: False
 
 hyper_params:
-  cross_prob: 1
+  cross_prob: 1.0
   mut_prob: 0.7
-  pop_size: 1000
+  pop_size: 5000
   num_elites: 1
 
 neat_params:

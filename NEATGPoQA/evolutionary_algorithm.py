@@ -168,7 +168,8 @@ class ConfigurableGP:
                 connection = Connection(start_node, end_node, i, Qubit_type.TARGET, self.get_new_innovation_numbers([starting_inno_nums], Innovation_type.INIT)[0])
                 starting_inno_nums += 1
                 new_individual.add_connection(connection)
-        for i in range(self.neat_params.init_mutations):
+        num_mutations = random.randint(self.neat_params.min_init_mutations, self.neat_params.max_init_mutations)
+        for i in range(num_mutations):
             self.mutate_neat_individual(new_individual)
         return new_individual
 
