@@ -50,11 +50,8 @@ class NeatParams:
         self.change_conn_types_prob = change_conn_types_prob
 
         #Mutation action probabilities
-        self.change_ind_angle_prob = change_ind_angle_prob
         self.assign_random_angle_prob = assign_random_angle_prob
         self.max_angle_change = max_angle_change
-        self.change_ind_gate_prob = change_ind_gate_prob
-        self.change_ind_conn_type_prob = change_ind_conn_type_prob
 
         if not math.isclose(change_angles_prob + change_gates_prob + change_conn_types_prob + split_conn_prob + add_conn_prob, 1, rel_tol=1e-9):
             raise ValueError("The sum of the NEAT mutation type probabilities must be 1")
