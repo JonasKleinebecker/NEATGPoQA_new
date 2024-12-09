@@ -435,6 +435,8 @@ class ConfigurableGP:
         return neat_individual,
 
     def change_angles_neat(self, neat_individual):
+        if len(neat_individual.gate_nodes) == 0:
+            return neat_individual,
         node_to_change = random.choice(neat_individual.gate_nodes)
         if random.random() < self.neat_params.assign_random_angle_prob:
             node_to_change.angle = random.uniform(0, 2 * math.pi)
@@ -447,6 +449,8 @@ class ConfigurableGP:
         return neat_individual,
 
     def change_gates_neat(self, individual):
+        if len(individual.gate_nodes) == 0:
+            return individual,
         node_to_change = random.choice(individual.gate_nodes)
         new_gate_type = random.choice(self.setup_params.gate_set)
         while new_gate_type == node_to_change.gate_type:
