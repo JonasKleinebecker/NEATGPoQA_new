@@ -671,7 +671,7 @@ class ConfigurableGP:
         gate_type_dissimilarity = self.neat_params.gate_type_coeff * (non_matching_gate_types / matching_node_genes) if matching_node_genes > 0 else 0
         return gate_node_dissimilarity + connection_dissimilarity + angle_dissimilarity + gate_type_dissimilarity
     
-    def neat_speciate_initial(self, population):
+    def neat_speciate_initial(self, population): #TODO: outdated. neat_speciate with an empty ind_by_species dictionary should work
         representatives = {}
         ind_by_species = {}
         for ind in population:
@@ -705,6 +705,7 @@ class ConfigurableGP:
                 ind.species_id = self.neat_state.next_species_id
                 self.neat_state.next_species_id += 1
                 ind_by_species[ind.species_id] = [ind]
+                representatives[ind.species_id] = ind
         return ind_by_species
 
     def assemble_parents_and_assign_offspring(self, ind_by_species, avg_base_fitness):
