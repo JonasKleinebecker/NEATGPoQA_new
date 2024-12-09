@@ -30,7 +30,7 @@ class SetupParams:
             self.gate_set.append(GateType.ORACLE)
 
 class NeatParams:
-    def __init__(self, replace_p_worst, survival_perc, min_init_mutations, max_init_mutations, conn_node_coeff, angle_coeff, gate_node_coeff, gate_type_coeff, species_threshold, adj_fitness_reg_term, add_conn_prob, split_conn_prob, change_angles_prob, change_ind_angle_prob, assign_random_angle_prob, max_angle_change, change_gates_prob, change_ind_gate_prob, change_conn_types_prob, change_ind_conn_type_prob, max_offspring_perc):
+    def __init__(self, replace_p_worst, survival_perc, min_init_mutations, max_init_mutations, conn_node_coeff, angle_coeff, gate_node_coeff, gate_type_coeff, species_threshold, adj_fitness_reg_term, add_conn_prob, split_conn_prob, change_angles_prob, assign_random_angle_prob, max_angle_change, change_gates_prob, change_conn_types_prob, max_offspring_perc):
         self.replace_p_worst = replace_p_worst
         self.survival_perc = survival_perc
         self.min_init_mutations = min_init_mutations
@@ -51,11 +51,8 @@ class NeatParams:
         self.change_conn_types_prob = change_conn_types_prob
 
         #Mutation action probabilities
-        self.change_ind_angle_prob = change_ind_angle_prob
         self.assign_random_angle_prob = assign_random_angle_prob
         self.max_angle_change = max_angle_change
-        self.change_ind_gate_prob = change_ind_gate_prob
-        self.change_ind_conn_type_prob = change_ind_conn_type_prob
 
         if not math.isclose(change_angles_prob + change_gates_prob + change_conn_types_prob + split_conn_prob + add_conn_prob, 1, rel_tol=1e-9):
             raise ValueError("The sum of the NEAT mutation type probabilities must be 1")
