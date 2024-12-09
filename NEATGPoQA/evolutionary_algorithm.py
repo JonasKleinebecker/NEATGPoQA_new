@@ -435,28 +435,31 @@ class ConfigurableGP:
         return neat_individual,
 
     def change_angles_neat(self, neat_individual):
-        for node in neat_individual.gate_nodes:
-            if random.random() <self.neat_params.change_ind_angle_prob:
-                if random.random() < self.neat_params.assign_random_angle_prob:
-                    node.angle = random.uniform(0, 2 * math.pi)
-                else:
-                    node.angle += random.uniform(-self.neat_params.max_angle_change, self.neat_params.max_angle_change)
-                    if node.angle < 0:
-                        node.angle += 2 * math.pi
-                    elif node.angle > 2 * math.pi:
-                        node.angle -= 2 * math.pi
+        node_to_change = random.choice(neat_individual.gate_nodes)
+        if random.random() < self.neat_params.assign_random_angle_prob:
+            node_to_change.angle = random.uniform(0, 2 * math.pi)
+        else:
+            node_to_change.angle += random.uniform(-self.neat_params.max_angle_change, self.neat_params.max_angle_change)
+            if node_to_change.angle < 0:
+                node_to_change.angle += 2 * math.pi
+            elif node_to_change.angle > 2 * math.pi:
+                node_to_change.angle -= 2 * math.pi
         return neat_individual,
 
     def change_gates_neat(self, individual):
-        for node in individual.gate_nodes:
-            if random.random() < self.neat_params.change_ind_gate_prob:
-                node.gate_type = random.choice(self.setup_params.gate_set)
+        node_to_change = random.choice(individual.gate_nodes)
+        new_gate_type = random.choice(self.setup_params.gate_set)
+        while new_gate_type == node_to_change.gate_type:
+            new_gate_type = random.choice(self.setup_params.gate_set)
+        node_to_change.gate_type = new_gate_type
         return individual,
 
     def change_conn_types_neat(self, individual):
-        for connection in individual.connections:
-            if random.random() < self.neat_params.change_ind_conn_type_prob:
-                connection.type = random.choice([Qubit_type.CONTROL, Qubit_type.TARGET])
+        connection_to_change = random.choice(individual.connections)
+        if connection_to_change.type == Qubit_type.CONTROL:
+            connection_to_change.type = Qubit_type.TARGET
+        else:
+            connection_to_change.type = Qubit_type.CONTROL
         return individual,
 
     def mutate_neat_individual(self, neat_individual):
