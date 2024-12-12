@@ -122,19 +122,19 @@ if __name__ == "__main__":
 
     output_dir = "config_files/generated"
     base_config_file = "config_files/neat_test.yaml"
-    num_computers = 1
-    runs = 4  
-    #generate_config_files(param_ranges, output_dir, base_config_file, num_computers, runs, "neat")
+    num_computers = 20
+    runs = 10  
+    generate_config_files(param_ranges, output_dir, base_config_file, num_computers, runs, "neat")
 
     param_ranges = {
         'pop_size': [500, 1000, 2000, 5000],
         'cross_prob': [0.8, 1.0],
-        'mut_prob': [0.15, 0.25, 0.35],
+        'mut_prob': [0.25, 0.35, 0.45],
         'test_problem': ['deutsch_josza', 'qft', 'full_adder']
     }
     base_config_file = "config_files/base_test.yaml"
-    #generate_config_files(param_ranges, output_dir, base_config_file, num_computers, runs, "base")
-    #organize_config_files(output_dir)    
+    generate_config_files(param_ranges, output_dir, base_config_file, num_computers, runs, "base")
+    organize_config_files(output_dir)    
 
     computer_id = 1
 
@@ -143,5 +143,5 @@ if __name__ == "__main__":
 
     #run_gp(config_files[0])
 
-    with mp.Pool(processes=6) as pool:
-        pool.map(run_gp, config_files)
+    #with mp.Pool(processes=6) as pool:
+        #pool.map(run_gp, config_files)

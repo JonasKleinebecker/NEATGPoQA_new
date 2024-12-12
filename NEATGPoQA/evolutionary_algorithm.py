@@ -992,7 +992,7 @@ class ConfigurableGP:
                 print(f"  Num potential offsprings: {sum([ind.offspring_count for ind in potential_parents_list])}")
 
             start_time_evolution_ops = time.time()
-            while len(potential_parents_list) > 0 and len(new_individuals) < math.ceil(self.hyper_params.pop_size * self.neat_params.replace_p_worst):
+            while len(potential_parents_list) > 0 and len(new_individuals) < math.ceil(self.hyper_params.pop_size):
                 if random.random() < 0.5:
                     parent_1 = potential_parents_list[0]
                 else:

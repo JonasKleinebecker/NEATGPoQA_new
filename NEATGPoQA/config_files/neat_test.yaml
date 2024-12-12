@@ -3,7 +3,7 @@ setup_params:
   max_ind_length: 30
   use_neat: True
   gate_set: ["h", "x", "mcx", "rx", "ry", "rz", "swap", "mcp"]
-  max_time: 15
+  max_time: 25
   simulator_type: "statevector"
   test_problem: "deutsch_josza"
   min_gate_error: 0.005
