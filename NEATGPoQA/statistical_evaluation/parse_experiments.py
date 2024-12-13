@@ -219,20 +219,68 @@ def delete_old_folders(base_folder):
                         break
 
 
-base_folder = "resules/exp2"
-rename_folders(base_folder)
+base_folder = "results/exp2"
+#rename_folders(base_folder)
 experiment_data = load_experiment_data_from_folders(base_folder)
 
 values = experiment_data.values()
-neat_qft_runs = {k: v for k, v in experiment_data.items() if k[0] == "neat" and k[1] == "qft"}
-base_qft_runs = {k: v for k, v in experiment_data.items() if k[0] == "base" and k[1] == "fulladder"}
+all_neat_runs = {k: v for k, v in experiment_data.items() if k[0] == "neat"}
+all_base_runs = {k: v for k, v in experiment_data.items() if k[0] == "base"}
 
 percentages = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 ,60, 65, 70, 75, 80, 85, 90, 95, 100]
 
-#averaged_metrics_base = average_metrics_by_percentage(base_qft_runs, percentages)
-#averaged_metrics_neat = average_metrics_by_percentage(neat_qft_runs, percentages)
-#metrics_list = [averaged_metrics_base]
+approach_names = ["Base Approach", "NEAT Approach"]
 
-#plot_multiple_metrics_vs_percentage(metrics_list, "Min error", filenames="MinError.png")
+test_problems = {
+    "deutsch-josza": "Deutsch-Josza Problem",
+    "qft" : "Quantum Fourier Transform",
+    "full-adder" : "Full Adder"
+}
 
-#print(averaged_metrics_base)
+cross_rates = [0.8, 1.0]
+mut_rates_base = [0.25, 0.35, 0.45]
+mut_rates_neat = [0.55, 0.7, 0.85]
+pop_sizes = [500, 1000, 2000, 5000]
+
+for test_problem_key, test_problem_name in test_problems.items():
+    for cross_rate in cross_rates:
+        neat_runs = {k: v for k, v in all_neat_runs.items() if k[1] == test_problem_key and k[2] == cross_rate}
+        base_runs = {k: v for k, v in all_base_runs.items() if k[1] == test_problem_key and k[2] == cross_rate}
+
+        averaged_metrics_base = average_metrics_by_percentage(base_runs, percentages)
+        averaged_metrics_neat = average_metrics_by_percentage(neat_runs, percentages)
+
+        metrics_list = [averaged_metrics_base, averaged_metrics_neat]
+
+        plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} Crossover Rate = {cross_rate}", filename=f"plots/{test_problem_key}/Hypervolume_cross_rate_{cross_rate}.png")
+    
+    for pop_size in pop_sizes:
+        neat_runs = {k: v for k, v in all_neat_runs.items() if k[1] == test_problem_key and k[4] == pop_size}
+        base_runs = {k: v for k, v in all_base_runs.items() if k[1] == test_problem_key and k[4] == pop_size}
+
+        averaged_metrics_base = average_metrics_by_percentage(base_runs, percentages)
+        averaged_metrics_neat = average_metrics_by_percentage(neat_runs, percentages)
+
+        metrics_list = [averaged_metrics_base, averaged_metrics_neat]
+
+        plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} Population Size = {pop_size}", filename=f"plots/{test_problem_key}/Hypervolume_pop_size_{pop_size}.png")
+
+    metrics_list = []
+    approach_names = []
+    for mut_rate in mut_rates_base:
+        base_runs = {k: v for k, v in all_base_runs.items() if k[1] == test_problem_key and k[3] == mut_rate}
+        averaged_metrics_base = average_metrics_by_percentage(base_runs, percentages)
+        metrics_list.append(averaged_metrics_base)
+        approach_names.append(f"Mutation Rate = {mut_rate}")
+    
+    plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} Base Approach", filename=f"plots/{test_problem_key}/Hypervolume_base_mut_rates.png")
+
+    metrics_list = []
+    approach_names = []
+    for mut_rate in mut_rates_neat:
+        neat_runs = {k: v for k, v in all_neat_runs.items() if k[1] == test_problem_key and k[3] == mut_rate}
+        averaged_metrics_neat = average_metrics_by_percentage(neat_runs, percentages)
+        metrics_list.append(averaged_metrics_neat)
+        approach_names.append(f"Mutation Rate = {mut_rate}")
+    
+    plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} NEAT Approach", filename=f"plots/{test_problem_key}/Hypervolume_neat_mut_rates.png")
