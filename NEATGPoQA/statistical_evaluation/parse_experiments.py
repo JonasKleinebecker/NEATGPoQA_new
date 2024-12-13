@@ -1,3 +1,4 @@
+import shutil
 import pandas as pd
 import os
 from collections import defaultdict
@@ -14,31 +15,41 @@ def load_experiment_data_from_folders(base_folder):
         dict: Nested dictionary where keys are experiment parameters and values are lists of DataFrames.
     """
     experiment_data = defaultdict(lambda: defaultdict(list))
+
+    computers_parsed = 0
+    total_experiments_parsed = 0
     
-    for folder_name in os.listdir(base_folder):
-        folder_path = os.path.join(base_folder, folder_name)
+    for computer_folder in os.listdir(base_folder):
+        experiments_parsed_in_computer = 0
+        for experiment_folder in os.listdir(os.path.join(base_folder, computer_folder)):
+            folder_path = os.path.join(base_folder, computer_folder, experiment_folder)
         
-        if os.path.isdir(folder_path):
-            # Parse parameters from the folder name
-            params = parse_folder_name(folder_name)
+            if os.path.isdir(folder_path):
+                # Parse parameters from the folder name
+                params = parse_folder_name(experiment_folder)
             
-            # Load all CSV files in the folder
-            for file_name in os.listdir(folder_path):
-                if file_name.endswith('.csv'):
-                    file_path = os.path.join(folder_path, file_name)
-                    df = load_csv_excluding_pareto(file_path)
+                # Load all CSV files in the folder
+                for file_name in os.listdir(folder_path):
+                    if file_name.endswith('.csv'):
+                        file_path = os.path.join(folder_path, file_name)
+                        df = load_csv_excluding_pareto(file_path)
                     
-                    # Store the DataFrame in the nested dictionary
-                    key = (
-                        params['approach'], 
-                        params['test_problem'], 
-                        params['crossover_rate'], 
-                        params['mutation_rate'], 
-                        params['population_size']
-                    )
-                    experiment_data[key]['data'].append(df)
-                    experiment_data[key]['params'] = params
-    
+                        # Store the DataFrame in the nested dictionary
+                        key = (
+                            params['approach'], 
+                            params['test_problem'], 
+                            params['crossover_rate'], 
+                            params['mutation_rate'], 
+                            params['population_size']
+                        )
+                        experiment_data[key]['data'].append(df)
+                        experiment_data[key]['params'] = params
+                        total_experiments_parsed += 1
+                        experiments_parsed_in_computer += 1
+        computers_parsed += 1
+        print(f"Experiments parsed in computer {computer_folder}: {experiments_parsed_in_computer}")
+    print(f"Total experiments parsed: {total_experiments_parsed}")
+    print(f"Total computers parsed: {computers_parsed}")
     return experiment_data
 
 def parse_folder_name(folder_name):
@@ -131,14 +142,18 @@ def average_metrics_by_percentage(runs, percentages):
     averaged_df.index.name = 'Percentage'
     return averaged_df
 
-def plot_multiple_metrics_vs_percentage(averaged_results_list, metric_name, filenames=None):
+def plot_multiple_metrics_vs_percentage(averaged_results_list, approach_names, metric_name, title, filename=None, ymin=None, ymax=None):
     """
     Plots the specified metric against the percentages of total runtime for multiple averaged_results.
 
     Args:
         averaged_results_list (list of dicts): List containing multiple dictionaries of averaged results.
+        approach_names (list of str): Names of the approaches corresponding to the averaged results.
         metric_name (str): The name of the metric to plot (e.g., "Hypervolume", "Min error").
-        filenames (list of str or str, optional): If provided, saves each plot to the corresponding file(s).
+        title (str): The title of the plot.
+        filename (str, optional): If provided, saves the plot to the specified file.
+        ymin (float, optional): The lower bound of the y-axis.
+        ymax (float, optional): The upper bound of the y-axis.
 
     Returns:
         None: Displays or saves the plot.
@@ -146,60 +161,135 @@ def plot_multiple_metrics_vs_percentage(averaged_results_list, metric_name, file
     plt.figure(figsize=(10, 6))  # Set up the plot figure
     
     # Loop over each averaged_results dictionary in the list
-    for i, averaged_results in enumerate(averaged_results_list):
+    for averaged_results, approach_name in zip(averaged_results_list, approach_names):
         metrics = list(averaged_results.keys())  # x values (percentages)
 
         if metric_name not in metrics:
             raise ValueError(f"Metric '{metric_name}' not found in the averaged results.")
 
-        percentages = averaged_results[metrics[0]].index   
+        percentages = averaged_results[metrics[0]].index
 
         # Extract the metric values for each percentage
         metric_values = [averaged_results[metric_name][perc] for perc in percentages]
 
         # Plot the data for this particular set of results
-        label = f"Base Aproach"  # Default label (can be customized)
+        label = approach_name  # Default label (can be customized)
         plt.plot(percentages, metric_values, marker='o', linestyle='-', label=label)
 
     # Add labels and title
     plt.xlabel('Percentage of Total Runtime', fontsize=12)
     plt.ylabel(metric_name, fontsize=12)
-    plt.title(f'{metric_name} vs Percentage of Total Runtime Base Full-Adder-Problem', fontsize=14)
-    
+    plt.title(title, fontsize=14, fontstyle='italic')
+
+    # Set static y-axis limits if provided
+    if ymin is not None or ymax is not None:
+        plt.ylim(ymin, ymax)
+
     # Show the grid and plot
     plt.grid(True)
     plt.xticks(percentages)  # Ensure that all percentages are displayed on the x-axis
     plt.legend()
     plt.tight_layout()
 
-    # If filenames are provided, save the plot(s) as separate files
-    if filenames:
-        if isinstance(filenames, list):
-            for i, filename in enumerate(filenames):
-                plt.savefig(filename)
-                print(f"Plot saved as {filename}")
-        else:
-            # Save a single plot if one filename is provided
-            plt.savefig(filenames)
-            print(f"Plot saved as {filenames}")
+    # If filename is provided, save the plot as a file
+    if filename:
+        plt.savefig(filename)
+        print(f"Plot saved as {filename}")
     else:
-        # Display the plot if no filenames are provided
+        # Display the plot if no filename is provided
         plt.show()
 
 
-base_folder = "results/all"
+def rename_folders(base_folder):
+    terms_to_replace = ["deutsch_josza", "full_adder"]
+
+    for computer_folder in os.listdir(base_folder):
+        for experiment_folder in os.listdir(os.path.join(base_folder, computer_folder)):
+            original_folder_path = os.path.join(base_folder, computer_folder, experiment_folder)
+            if os.path.isdir(original_folder_path):
+                new_folder_name = experiment_folder
+                for term in terms_to_replace:
+                    new_folder_name = new_folder_name.replace(term, term.replace("_", "-"))
+                if new_folder_name != experiment_folder:
+                    new_folder_path = os.path.join(base_folder, computer_folder, new_folder_name)
+                    os.rename(original_folder_path, new_folder_path)                
+
+def delete_old_folders(base_folder):
+    terms_to_check = ["deutsch_josza", "full_adder"]
+
+    for computer_folder in os.listdir(base_folder):
+        for experiment_folder in os.listdir(os.path.join(base_folder, computer_folder)):
+            folder_path = os.path.join(base_folder, computer_folder, experiment_folder)
+            if os.path.isdir(folder_path):
+                for term in terms_to_check:
+                    if term in experiment_folder:
+                        print(f"Deleting folder {folder_path}")
+                        shutil.rmtree(folder_path)
+                        break
+
+
+base_folder = "results/exp_1"
+#rename_folders(base_folder)
 experiment_data = load_experiment_data_from_folders(base_folder)
 
 values = experiment_data.values()
-neat_qft_runs = {k: v for k, v in experiment_data.items() if k[0] == "neat" and k[1] == "qft"}
-base_qft_runs = {k: v for k, v in experiment_data.items() if k[0] == "base" and k[1] == "fulladder"}
+all_neat_runs = {k: v for k, v in experiment_data.items() if k[0] == "neat"}
+all_base_runs = {k: v for k, v in experiment_data.items() if k[0] == "base"}
 
 percentages = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 ,60, 65, 70, 75, 80, 85, 90, 95, 100]
 
-averaged_metrics_base = average_metrics_by_percentage(base_qft_runs, percentages)
-averaged_metrics_neat = average_metrics_by_percentage(neat_qft_runs, percentages)
-metrics_list = [averaged_metrics_base]
 
-plot_multiple_metrics_vs_percentage(metrics_list, "Min error", filenames="MinError.png")
+test_problems = {
+    "deutsch-josza": "Deutsch-Josza Problem",
+    "qft" : "Quantum Fourier Transform",
+    "full-adder" : "Full Adder"
+}
 
-print(averaged_metrics_base)
+cross_rates = [0.8, 1.0]
+mut_rates_base = [0.15, 0.25, 0.35]
+mut_rates_neat = [0.55, 0.7, 0.85]
+pop_sizes = [500, 1000, 2000, 5000]
+
+for test_problem_key, test_problem_name in test_problems.items():
+    approach_names = ["Base Approach", "NEAT Approach"]
+    for cross_rate in cross_rates:
+        neat_runs = {k: v for k, v in all_neat_runs.items() if k[1] == test_problem_key and k[2] == cross_rate}
+        base_runs = {k: v for k, v in all_base_runs.items() if k[1] == test_problem_key and k[2] == cross_rate}
+
+        averaged_metrics_base = average_metrics_by_percentage(base_runs, percentages)
+        averaged_metrics_neat = average_metrics_by_percentage(neat_runs, percentages)
+
+        metrics_list = [averaged_metrics_base, averaged_metrics_neat]
+
+        plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} Crossover Rate = {cross_rate}", filename=f"plots/{test_problem_key}/Hypervolume_cross_rate_{cross_rate}.png", ymin=0.4, ymax=0.95)
+    
+    for pop_size in pop_sizes:
+        neat_runs = {k: v for k, v in all_neat_runs.items() if k[1] == test_problem_key and k[4] == pop_size}
+        base_runs = {k: v for k, v in all_base_runs.items() if k[1] == test_problem_key and k[4] == pop_size}
+
+        averaged_metrics_base = average_metrics_by_percentage(base_runs, percentages)
+        averaged_metrics_neat = average_metrics_by_percentage(neat_runs, percentages)
+
+        metrics_list = [averaged_metrics_base, averaged_metrics_neat]
+
+        plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} Population Size = {pop_size}", filename=f"plots/{test_problem_key}/Hypervolume_pop_size_{pop_size}.png", ymin=0.4, ymax=0.95)
+
+    metrics_list = []
+    approach_names = []
+    for mut_rate in mut_rates_base:
+        base_runs = {k: v for k, v in all_base_runs.items() if k[1] == test_problem_key and k[3] == mut_rate}
+        averaged_metrics_base = average_metrics_by_percentage(base_runs, percentages)
+        metrics_list.append(averaged_metrics_base)
+        approach_names.append(f"Mutation Rate = {mut_rate}")
+    
+    plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} Base Approach", filename=f"plots/{test_problem_key}/Hypervolume_base_mut_rates.png", ymin=0.4, ymax=0.95)
+
+    metrics_list = []
+    approach_names = []
+    for mut_rate in mut_rates_neat:
+        neat_runs = {k: v for k, v in all_neat_runs.items() if k[1] == test_problem_key and k[3] == mut_rate}
+        averaged_metrics_neat = average_metrics_by_percentage(neat_runs, percentages)
+        metrics_list.append(averaged_metrics_neat)
+        approach_names.append(f"Mutation Rate = {mut_rate}")
+    
+    plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} NEAT Approach", filename=f"plots/{test_problem_key}/Hypervolume_neat_mut_rates.png", ymin=0.4, ymax=0.95)
