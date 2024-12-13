@@ -142,14 +142,18 @@ def average_metrics_by_percentage(runs, percentages):
     averaged_df.index.name = 'Percentage'
     return averaged_df
 
-def plot_multiple_metrics_vs_percentage(averaged_results_list, approach_names, metric_name, title, filename=None):
+def plot_multiple_metrics_vs_percentage(averaged_results_list, approach_names, metric_name, title, filename=None, ymin=None, ymax=None):
     """
     Plots the specified metric against the percentages of total runtime for multiple averaged_results.
 
     Args:
         averaged_results_list (list of dicts): List containing multiple dictionaries of averaged results.
+        approach_names (list of str): Names of the approaches corresponding to the averaged results.
         metric_name (str): The name of the metric to plot (e.g., "Hypervolume", "Min error").
-        filenames (list of str or str, optional): If provided, saves each plot to the corresponding file(s).
+        title (str): The title of the plot.
+        filename (str, optional): If provided, saves the plot to the specified file.
+        ymin (float, optional): The lower bound of the y-axis.
+        ymax (float, optional): The upper bound of the y-axis.
 
     Returns:
         None: Displays or saves the plot.
@@ -163,7 +167,7 @@ def plot_multiple_metrics_vs_percentage(averaged_results_list, approach_names, m
         if metric_name not in metrics:
             raise ValueError(f"Metric '{metric_name}' not found in the averaged results.")
 
-        percentages = averaged_results[metrics[0]].index   
+        percentages = averaged_results[metrics[0]].index
 
         # Extract the metric values for each percentage
         metric_values = [averaged_results[metric_name][perc] for perc in percentages]
@@ -176,20 +180,25 @@ def plot_multiple_metrics_vs_percentage(averaged_results_list, approach_names, m
     plt.xlabel('Percentage of Total Runtime', fontsize=12)
     plt.ylabel(metric_name, fontsize=12)
     plt.title(title, fontsize=14, fontstyle='italic')
-    
+
+    # Set static y-axis limits if provided
+    if ymin is not None or ymax is not None:
+        plt.ylim(ymin, ymax)
+
     # Show the grid and plot
     plt.grid(True)
     plt.xticks(percentages)  # Ensure that all percentages are displayed on the x-axis
     plt.legend()
     plt.tight_layout()
 
-    # If filenames are provided, save the plot(s) as separate files
+    # If filename is provided, save the plot as a file
     if filename:
         plt.savefig(filename)
         print(f"Plot saved as {filename}")
     else:
-        # Display the plot if no filenames are provided
+        # Display the plot if no filename is provided
         plt.show()
+
 
 def rename_folders(base_folder):
     terms_to_replace = ["deutsch_josza", "full_adder"]
@@ -229,7 +238,6 @@ all_base_runs = {k: v for k, v in experiment_data.items() if k[0] == "base"}
 
 percentages = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 ,60, 65, 70, 75, 80, 85, 90, 95, 100]
 
-approach_names = ["Base Approach", "NEAT Approach"]
 
 test_problems = {
     "deutsch-josza": "Deutsch-Josza Problem",
@@ -243,6 +251,7 @@ mut_rates_neat = [0.55, 0.7, 0.85]
 pop_sizes = [500, 1000, 2000, 5000]
 
 for test_problem_key, test_problem_name in test_problems.items():
+    approach_names = ["Base Approach", "NEAT Approach"]
     for cross_rate in cross_rates:
         neat_runs = {k: v for k, v in all_neat_runs.items() if k[1] == test_problem_key and k[2] == cross_rate}
         base_runs = {k: v for k, v in all_base_runs.items() if k[1] == test_problem_key and k[2] == cross_rate}
@@ -252,7 +261,7 @@ for test_problem_key, test_problem_name in test_problems.items():
 
         metrics_list = [averaged_metrics_base, averaged_metrics_neat]
 
-        plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} Crossover Rate = {cross_rate}", filename=f"plots/{test_problem_key}/Hypervolume_cross_rate_{cross_rate}.png")
+        plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} Crossover Rate = {cross_rate}", filename=f"plots/{test_problem_key}/Hypervolume_cross_rate_{cross_rate}.png", ymin=0.4, ymax=0.95)
     
     for pop_size in pop_sizes:
         neat_runs = {k: v for k, v in all_neat_runs.items() if k[1] == test_problem_key and k[4] == pop_size}
@@ -263,7 +272,7 @@ for test_problem_key, test_problem_name in test_problems.items():
 
         metrics_list = [averaged_metrics_base, averaged_metrics_neat]
 
-        plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} Population Size = {pop_size}", filename=f"plots/{test_problem_key}/Hypervolume_pop_size_{pop_size}.png")
+        plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} Population Size = {pop_size}", filename=f"plots/{test_problem_key}/Hypervolume_pop_size_{pop_size}.png", ymin=0.4, ymax=0.95)
 
     metrics_list = []
     approach_names = []
@@ -273,7 +282,7 @@ for test_problem_key, test_problem_name in test_problems.items():
         metrics_list.append(averaged_metrics_base)
         approach_names.append(f"Mutation Rate = {mut_rate}")
     
-    plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} Base Approach", filename=f"plots/{test_problem_key}/Hypervolume_base_mut_rates.png")
+    plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} Base Approach", filename=f"plots/{test_problem_key}/Hypervolume_base_mut_rates.png", ymin=0.4, ymax=0.95)
 
     metrics_list = []
     approach_names = []
@@ -283,4 +292,4 @@ for test_problem_key, test_problem_name in test_problems.items():
         metrics_list.append(averaged_metrics_neat)
         approach_names.append(f"Mutation Rate = {mut_rate}")
     
-    plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} NEAT Approach", filename=f"plots/{test_problem_key}/Hypervolume_neat_mut_rates.png")
+    plot_multiple_metrics_vs_percentage(metrics_list, approach_names, "Hypervolume", f"Hypervolume vs Percent Runtime for {test_problem_name} NEAT Approach", filename=f"plots/{test_problem_key}/Hypervolume_neat_mut_rates.png", ymin=0.4, ymax=0.95)
