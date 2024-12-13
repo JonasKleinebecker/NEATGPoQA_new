@@ -1,3 +1,4 @@
+import shutil
 import pandas as pd
 import os
 from collections import defaultdict
@@ -14,31 +15,41 @@ def load_experiment_data_from_folders(base_folder):
         dict: Nested dictionary where keys are experiment parameters and values are lists of DataFrames.
     """
     experiment_data = defaultdict(lambda: defaultdict(list))
+
+    computers_parsed = 0
+    total_experiments_parsed = 0
     
-    for folder_name in os.listdir(base_folder):
-        folder_path = os.path.join(base_folder, folder_name)
+    for computer_folder in os.listdir(base_folder):
+        experiments_parsed_in_computer = 0
+        for experiment_folder in os.listdir(os.path.join(base_folder, computer_folder)):
+            folder_path = os.path.join(base_folder, computer_folder, experiment_folder)
         
-        if os.path.isdir(folder_path):
-            # Parse parameters from the folder name
-            params = parse_folder_name(folder_name)
+            if os.path.isdir(folder_path):
+                # Parse parameters from the folder name
+                params = parse_folder_name(experiment_folder)
             
-            # Load all CSV files in the folder
-            for file_name in os.listdir(folder_path):
-                if file_name.endswith('.csv'):
-                    file_path = os.path.join(folder_path, file_name)
-                    df = load_csv_excluding_pareto(file_path)
+                # Load all CSV files in the folder
+                for file_name in os.listdir(folder_path):
+                    if file_name.endswith('.csv'):
+                        file_path = os.path.join(folder_path, file_name)
+                        df = load_csv_excluding_pareto(file_path)
                     
-                    # Store the DataFrame in the nested dictionary
-                    key = (
-                        params['approach'], 
-                        params['test_problem'], 
-                        params['crossover_rate'], 
-                        params['mutation_rate'], 
-                        params['population_size']
-                    )
-                    experiment_data[key]['data'].append(df)
-                    experiment_data[key]['params'] = params
-    
+                        # Store the DataFrame in the nested dictionary
+                        key = (
+                            params['approach'], 
+                            params['test_problem'], 
+                            params['crossover_rate'], 
+                            params['mutation_rate'], 
+                            params['population_size']
+                        )
+                        experiment_data[key]['data'].append(df)
+                        experiment_data[key]['params'] = params
+                        total_experiments_parsed += 1
+                        experiments_parsed_in_computer += 1
+        computers_parsed += 1
+        print(f"Experiments parsed in computer {computer_folder}: {experiments_parsed_in_computer}")
+    print(f"Total experiments parsed: {total_experiments_parsed}")
+    print(f"Total computers parsed: {computers_parsed}")
     return experiment_data
 
 def parse_folder_name(folder_name):
@@ -131,7 +142,7 @@ def average_metrics_by_percentage(runs, percentages):
     averaged_df.index.name = 'Percentage'
     return averaged_df
 
-def plot_multiple_metrics_vs_percentage(averaged_results_list, metric_name, filenames=None):
+def plot_multiple_metrics_vs_percentage(averaged_results_list, approach_names, metric_name, title, filename=None):
     """
     Plots the specified metric against the percentages of total runtime for multiple averaged_results.
 
@@ -146,7 +157,7 @@ def plot_multiple_metrics_vs_percentage(averaged_results_list, metric_name, file
     plt.figure(figsize=(10, 6))  # Set up the plot figure
     
     # Loop over each averaged_results dictionary in the list
-    for i, averaged_results in enumerate(averaged_results_list):
+    for averaged_results, approach_name in zip(averaged_results_list, approach_names):
         metrics = list(averaged_results.keys())  # x values (percentages)
 
         if metric_name not in metrics:
@@ -158,13 +169,13 @@ def plot_multiple_metrics_vs_percentage(averaged_results_list, metric_name, file
         metric_values = [averaged_results[metric_name][perc] for perc in percentages]
 
         # Plot the data for this particular set of results
-        label = f"Base Aproach"  # Default label (can be customized)
+        label = approach_name  # Default label (can be customized)
         plt.plot(percentages, metric_values, marker='o', linestyle='-', label=label)
 
     # Add labels and title
     plt.xlabel('Percentage of Total Runtime', fontsize=12)
     plt.ylabel(metric_name, fontsize=12)
-    plt.title(f'{metric_name} vs Percentage of Total Runtime Base Full-Adder-Problem', fontsize=14)
+    plt.title(title, fontsize=14, fontstyle='italic')
     
     # Show the grid and plot
     plt.grid(True)
@@ -173,21 +184,43 @@ def plot_multiple_metrics_vs_percentage(averaged_results_list, metric_name, file
     plt.tight_layout()
 
     # If filenames are provided, save the plot(s) as separate files
-    if filenames:
-        if isinstance(filenames, list):
-            for i, filename in enumerate(filenames):
-                plt.savefig(filename)
-                print(f"Plot saved as {filename}")
-        else:
-            # Save a single plot if one filename is provided
-            plt.savefig(filenames)
-            print(f"Plot saved as {filenames}")
+    if filename:
+        plt.savefig(filename)
+        print(f"Plot saved as {filename}")
     else:
         # Display the plot if no filenames are provided
         plt.show()
 
+def rename_folders(base_folder):
+    terms_to_replace = ["deutsch_josza", "full_adder"]
 
-base_folder = "results/all"
+    for computer_folder in os.listdir(base_folder):
+        for experiment_folder in os.listdir(os.path.join(base_folder, computer_folder)):
+            original_folder_path = os.path.join(base_folder, computer_folder, experiment_folder)
+            if os.path.isdir(original_folder_path):
+                new_folder_name = experiment_folder
+                for term in terms_to_replace:
+                    new_folder_name = new_folder_name.replace(term, term.replace("_", "-"))
+                if new_folder_name != experiment_folder:
+                    new_folder_path = os.path.join(base_folder, computer_folder, new_folder_name)
+                    os.rename(original_folder_path, new_folder_path)                
+
+def delete_old_folders(base_folder):
+    terms_to_check = ["deutsch_josza", "full_adder"]
+
+    for computer_folder in os.listdir(base_folder):
+        for experiment_folder in os.listdir(os.path.join(base_folder, computer_folder)):
+            folder_path = os.path.join(base_folder, computer_folder, experiment_folder)
+            if os.path.isdir(folder_path):
+                for term in terms_to_check:
+                    if term in experiment_folder:
+                        print(f"Deleting folder {folder_path}")
+                        shutil.rmtree(folder_path)
+                        break
+
+
+base_folder = "resules/exp2"
+rename_folders(base_folder)
 experiment_data = load_experiment_data_from_folders(base_folder)
 
 values = experiment_data.values()
@@ -196,10 +229,10 @@ base_qft_runs = {k: v for k, v in experiment_data.items() if k[0] == "base" and 
 
 percentages = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 ,60, 65, 70, 75, 80, 85, 90, 95, 100]
 
-averaged_metrics_base = average_metrics_by_percentage(base_qft_runs, percentages)
-averaged_metrics_neat = average_metrics_by_percentage(neat_qft_runs, percentages)
-metrics_list = [averaged_metrics_base]
+#averaged_metrics_base = average_metrics_by_percentage(base_qft_runs, percentages)
+#averaged_metrics_neat = average_metrics_by_percentage(neat_qft_runs, percentages)
+#metrics_list = [averaged_metrics_base]
 
-plot_multiple_metrics_vs_percentage(metrics_list, "Min error", filenames="MinError.png")
+#plot_multiple_metrics_vs_percentage(metrics_list, "Min error", filenames="MinError.png")
 
-print(averaged_metrics_base)
+#print(averaged_metrics_base)
